@@ -24,17 +24,20 @@ jobs:
           repository: CashControlGroup/traccar
           ref: custom/main
           token: ${{ secrets.SERVER_PUSH_TOKEN }}
-          submodules: true
 
-      - name: Move submodule to this commit and push
+      # The server's .gitmodules sets `ignore = all`, which hides submodule
+      # changes from git diff/status/commit -a, so read and write the pointer
+      # directly instead of checking the submodule out.
+      - name: Move submodule pointer to this commit and push
         run: |
-          git -C traccar-web fetch origin "${GITHUB_SHA}"
-          git -C traccar-web checkout --detach "${GITHUB_SHA}"
-          if git diff --quiet -- traccar-web; then
+          CURRENT=$(git rev-parse HEAD:traccar-web)
+          if [ "$CURRENT" = "$GITHUB_SHA" ]; then
             echo "Server fork already points at ${GITHUB_SHA}; nothing to ship."
             exit 0
           fi
+          git update-index --cacheinfo "160000,${GITHUB_SHA},traccar-web"
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -am "Advance traccar-web submodule to ${GITHUB_SHA::8}"
+          git commit -m "Advance traccar-web submodule to ${GITHUB_SHA::8}"
           git push origin HEAD:custom/main
+          echo "Shipped: ${CURRENT::8} -> ${GITHUB_SHA::8}"
