@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "grep -q \"gh pr create\" && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"A pull request was just created with gh pr create. Invoke the pr-followup skill now for that PR (its URL is in the command output).\"}}' || true",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

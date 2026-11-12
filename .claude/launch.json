@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-demo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--config", "demo/vite.config.js"],
+      "port": 3000
+    },
+    {
+      "name": "web-live",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 3000
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+name: ship-to-server
+
+# Ships merged front-end work: moves the traccar-web submodule in
+# CashControlGroup/traccar custom/main to this commit and pushes. That push
+# triggers the server fork's build-and-push, which deploys.
+# SERVER_PUSH_TOKEN: fine-grained PAT with Contents read/write on
+# CashControlGroup/traccar (a GITHUB_TOKEN push would not trigger the build).
+
+on:
+  push:
+    branches: [ custom/main ]
+
+concurrency:
+  group: ship-to-server
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout server fork custom/main
+        uses: actions/checkout@v4
+        with:
+          repository: CashControlGroup/traccar
+          ref: custom/main
+          token: ${{ secrets.SERVER_PUSH_TOKEN }}
+          submodules: true
+
+      - name: Move submodule to this commit and push
+        run: |
+          git -C traccar-web fetch origin "${GITHUB_SHA}"
+          git -C traccar-web checkout --detach "${GITHUB_SHA}"
+          if git diff --quiet -- traccar-web; then
+            echo "Server fork already points at ${GITHUB_SHA}; nothing to ship."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Advance traccar-web submodule to ${GITHUB_SHA::8}"
+          git push origin HEAD:custom/main
